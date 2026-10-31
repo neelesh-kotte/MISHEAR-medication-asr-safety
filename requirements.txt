@@ -1,0 +1,1 @@
+# Phase 1 scaffold only. Pin dependencies after the feasibility pilot and license/platform checks.

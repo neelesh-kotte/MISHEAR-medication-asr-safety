@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+.env
+# Generated audio and model weights require a license/size review before tracking.
+data/**/*.wav
+data/**/*.flac
+models/

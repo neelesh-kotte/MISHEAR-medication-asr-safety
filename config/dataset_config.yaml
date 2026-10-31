@@ -1,0 +1,6 @@
+# Freeze exact sources, retrieval dates, seeds, and pilot design before data generation.
+random_seed: 20261030
+medication_source: RxNorm
+active_ingredient_grouping: required
+pilot_pair_target: [20, 30]
+main_pair_planning_target: [100, 200]

@@ -1,0 +1,10 @@
+# Populate and freeze before benchmark ASR runs.
+recognizers:
+  - name: whisper.cpp
+    model: null
+    version: null
+    decoding: {}
+  - name: wav2vec2
+    model: null
+    version: null
+    decoding: {}

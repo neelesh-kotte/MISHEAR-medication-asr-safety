@@ -1,0 +1,7 @@
+# Planning values only; exact split IDs/threshold must be frozen before test access.
+seed: 20261030
+ingredient_split_fraction: {train: 0.60, validation: 0.20, test: 0.20}
+held_out_acoustic_conditions:
+  - clipping_family
+  - babble_snr_5_db_plus_rt60_0.8_s
+false_alert_budget_per_100_mentions: null  # choose before any test run
