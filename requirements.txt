@@ -2,3 +2,11 @@
 numpy>=1.24
 scipy>=1.10
 soundfile>=0.12
+
+# Optional ASR/model stack. whisper.cpp remains the prespecified primary backend.
+openai-whisper>=20231117
+torch>=2.2
+transformers>=4.44
+
+# Pronunciation lexicon for CMUdict-backed ARPAbet features.
+cmudict>=1.0

@@ -1,10 +1,21 @@
-# Populate and freeze before benchmark ASR runs.
+# Populate and freeze exact model revisions and decoding before test runs.
 recognizers:
   - name: whisper.cpp
-    model: null
+    backend: whisper.cpp
+    executable: null  # e.g. /path/to/whisper.cpp/build/bin/whisper-cli
+    model: null        # local ggml model file
     version: null
-    decoding: {}
+    decoding:
+      language: en
+      threads: 4
+      beam_size: 5
+      best_of: 5
+      temperature: 0.0
+      no_gpu: false
   - name: wav2vec2
-    model: null
+    backend: transformers-ctc
+    model: facebook/wav2vec2-base-960h
     version: null
-    decoding: {}
+    decoding:
+      decoder: greedy_ctc
+      device: auto

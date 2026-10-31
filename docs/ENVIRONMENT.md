@@ -9,11 +9,10 @@ xcode-select --install  # only if command-line tools are missing
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-# Add reviewed, pinned packages to requirements.txt before running:
-# python -m pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
-When selected, package groups from the blueprint include NumPy, pandas, SciPy, scikit-learn, statsmodels, matplotlib/seaborn, librosa or pydub, pyroomacoustics, phonemizer or g2p-en, SHAP, Transformers, and the selected TTS and ASR dependencies. Some packages have system or model-download requirements; record those after the pilot setup succeeds.
+The current `requirements.txt` covers the numerical/audio base, optional openai-whisper and Transformers/PyTorch backends, and CMUdict. Whisper's Python wrapper needs FFmpeg, and whisper.cpp needs a native build plus a separately downloaded ggml model. See [`PHASE3_ASR_AND_FEATURES.md`](PHASE3_ASR_AND_FEATURES.md) for install and run commands. Other blueprint packages (scikit-learn, statsmodels, SHAP, plotting, etc.) should be added when implementing their corresponding model/analysis phase, with resolved versions recorded before the experiment freeze.
 
 ## Initialize or inspect Git
 
