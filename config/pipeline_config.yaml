@@ -1,3 +1,5 @@
+# LEGACY SYNTHETIC TTS/DSP PIPELINE — superseded for the current study.
+# Active human-corpus paths and feasibility rules are in corpus_config.yaml.
 asr:
   backend: "openai_whisper"
   model_name: base

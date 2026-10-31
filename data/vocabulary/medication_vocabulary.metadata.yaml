@@ -1,0 +1,20 @@
+schema_version: "1.0"
+vocabulary_release: "mishear-core-rxnorm-2026-10-05-v2"
+source_release: "RxNorm Full Monthly Release 2026-10-05"
+source_release_url: "https://www.nlm.nih.gov/research/umls/licensedcontent/rxnormfiles.html"
+status: source_mapped_development_vocabulary
+schema_release_validated: true
+target_corpus_coverage: not_yet_assessed
+identifier_system: "RxNorm RxCUI (IN ingredient concepts; product RxCUI for combination product)"
+brand_mapping_rule: "Casefolded brand_names and aliases resolve to the row's ingredient_id; combination brands resolve to every component in combination_ingredient_ids."
+combination_products:
+  component_ids_column: combination_ingredient_ids
+  delimiter: "|"
+  examples:
+    - product_id: "RXNORM:861821"
+      display_name: "metformin/sitagliptin (Janumet)"
+      ingredient_ids: ["RXNORM:6809", "RXNORM:593411"]
+phonetic_keys:
+  algorithm: "src.vocabulary.metaphone and src.vocabulary.soundex"
+  use: "candidate retrieval only; not evidence of clinical equivalence"
+license_note: "RxNorm terms are governed by NLM RxNorm/UMLS terms; review the linked current terms before redistribution."

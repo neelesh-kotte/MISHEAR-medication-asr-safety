@@ -404,17 +404,11 @@ def run(config: Mapping[str, Any], stage: str = "all") -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", default="config/pipeline_config.yaml")
-    parser.add_argument("--stage", choices=("all", "asr", "model"), default="all",
-                        help="all executes the pipeline; asr/model resume from saved upstream artifacts")
-    args = parser.parse_args()
-    try:
-        import yaml
-    except ImportError as exc:
-        raise SystemExit("PyYAML is required: python -m pip install PyYAML") from exc
-    config = yaml.safe_load(Path(args.config).read_text(encoding="utf-8")) or {}
-    run(config, args.stage)
+    raise SystemExit(
+        "This is the archived synthetic TTS/DSP runner and is superseded. "
+        "Use `python run_pipeline.py --stage inventory --config config/corpus_config.yaml` "
+        "for the active human-speech protocol."
+    )
 
 
 if __name__ == "__main__":

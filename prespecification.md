@@ -1,58 +1,47 @@
-# MISHEAR v2 prespecification
+# MISHEAR cross-corpus study prespecification
 
-**Status:** Timestamped project prespecification; not a public registry registration.
-**Frozen at:** 2026-10-30 (America/Los_Angeles; repository commit timestamp records the exact time).
-**Source protocol:** `MISHEAR v2 Complete Execution Plan.pdf`, updated October 30, 2026.
-**Research type:** Fully computational; synthetic fictional speech, public terminology, and pretrained open-source ASR. No human participants, patient recordings, medical records, or real clinical notes are planned.
+**Protocol status:** pivoted protocol; confirmatory thresholds, corpus manifests, and medication adjudication remain to be frozen before outcome evaluation.
 
 ## Research question
 
-Can a calibrated machine-learning system predict medication-name substitutions made by automatic speech-recognition (ASR) systems on previously unseen active ingredients and previously unseen acoustic conditions, using phonetic, lexical, contextual, and measured acoustic features, and can a selective auditing system identify these errors at a controlled false-alert rate?
+Can an audio-aware auditor identify medication transcription errors better than ASR token/span confidence and recognizer-disagreement baselines on held-out speakers and ingredients, and does the advantage transfer to PriMock57?
 
-## Confirmatory hypotheses
+## Data sources and scope
 
-- **H1 — Unseen-medication predictive generalization:** A model combining phonetic, lexical, contextual, and measured acoustic features will predict medication-name transcription substitutions involving held-out active ingredients better than a phonetic-similarity-only baseline. **Primary endpoint:** AUPRC on the ingredient-disjoint test set, with paired AUPRC difference versus the phonetic baseline.
-- **H2 — Unseen-acoustic-condition generalization:** Predictive performance will remain measurably above the positive-class prevalence baseline on conditions excluded from model development. **Primary endpoint:** AUPRC on the held-out acoustic-condition set, compared with positive-class prevalence.
-- **H3 — Selective auditing:** A calibrated medication-specific auditor will identify more actual medication-name transcription errors than a similarity-only alert system at the same prespecified false-alert rate. **Primary endpoint:** error detection rate (percentage of actual errors detected) at a fixed false-alert budget, selected on validation data only using a finite-sample risk-control method. The numerical budget must be fixed before any test run; the plan gives 5 false alerts per 100 medication mentions as an example, not a final value.
-- **H4 — Cross-recognizer transfer:** The predictive approach will retain measurable value when evaluated using a second independently selected pretrained ASR recognizer. **Primary endpoint:** AUPRC on held-out data from the second recognizer.
+- **AfriSpeech-200:** existing human speech with official speaker-disjoint train/dev/test partitions; corpus license CC BY-NC-SA 4.0. It contains read sentence distributions and is not mock conversation.
+- **PriMock57:** 57 mock primary-care consultations with human utterance-level transcripts; upstream repository license CC BY 4.0. It is the external conversational transfer corpus. The entire consultation is the grouping unit.
+- Medication vocabulary must be versioned, alias-aware, and resolve brand/generic and combination products to ingredient identifiers. The checked-in schema-v1.0 development vocabulary is mapped to RxNorm IDs, but corpus coverage and reference labels still require validation before confirmatory use.
+- Do not place corpus audio, restricted labels, or identifying metadata in Git.
 
-All hypotheses are falsifiable. Failed hypotheses and negative results will be reported. Apply Holm correction across H1–H4.
+## Outcome and blinding
 
-## Exploratory analyses (not used to rescue confirmatory results; no multiplicity correction)
+Gold reference-to-ASR alignment labels each medication mention/utterance as correct or erroneous and records error subtype. Gold identity, reference-derived timestamps, gold candidate lists, and correctness labels are evaluation-only. Auditor and baseline prediction interfaces accept audio, ASR transcript, ASR confidence/N-best, independent ASR output, and the generally authorized vocabulary subset only. Candidate retrieval must be generated from ASR-side text and the general vocabulary, never from the known reference.
 
-- **E1 — Clinical context:** Compare ASR error rates and auditor performance for matched context-informative and context-neutral fictional sentences.
-- **E2 — Human-risk overlap:** Compare ASR-vulnerable medication pairs with public human look-alike/sound-alike risk lists; identify vulnerable pairs absent from those lists as candidates for verification, not clinical findings.
-- **E3 — Recognizer disagreement:** Assess whether disagreement between the two recognizers is a useful auditor feature.
-- **E4 — False-alert control under shift:** Assess whether the validation-selected false-alert budget holds on held-out acoustic conditions.
+## Partitions
 
-## Separate prediction tasks
+1. **Evaluation A — unseen speakers:** preserve the official AfriSpeech-200 train/dev/test partitions. Verify speaker IDs do not overlap; train/tune on official train/dev and evaluate once on official test.
+2. **Evaluation B — unseen ingredients:** freeze selected test ingredients before model fitting. No utterance containing a selected ingredient may enter supervised fitting, feature selection, or tuning. For multi-ingredient utterances, any mention of a held ingredient sends the whole utterance to test (or it is excluded under a separately frozen strict-pure policy); never split its labels across partitions.
+3. **External transfer — PriMock57:** train and freeze the auditor using AfriSpeech development data, then evaluate on the separately preprocessed PriMock57 corpus. If PriMock57 is partitioned for any development analysis, all utterances from one consultation remain together. Do not tune on external test outcomes.
 
-1. **Pair-level confusion prediction:** Estimate whether a recognizer confuses a medication-name pair under specified conditions. The target is pair vulnerability.
-2. **Recording-level error auditing:** Given audio, an ASR transcript, candidate alternatives, and available context, flag a specific transcript as potentially erroneous. The reference transcript and true medication label are withheld from the auditor and used only after prediction to calculate outcomes. The prototype will never automatically replace a medication name.
+## Systems and baselines
 
-## Evaluation and analysis commitments
+- Token/span confidence from the primary ASR.
+- N-best entropy or top-two score margin.
+- Transcript disagreement between independent recognizers/configurations.
+- Lexical/phonetic anomaly relative to the authorized medication vocabulary.
+- Combined text-side baseline classifier.
+- Audio-aware auditor: ASR-side mention spans, general vocabulary retrieval, audio support comparison for retrieved candidates, confidence and disagreement features, and a review-priority score. It never produces an automatic correction.
 
-- Main model: interpretable logistic regression using prespecified feature groups; LightGBM is optional only if data support it. Comparators: positive prevalence, phonetic similarity ranking, and phonetic-plus-lexical logistic regression.
-- Calibration: compare Platt scaling and isotonic regression using validation data only; report reliability and Brier score.
-- H1 split: ingredient-disjoint partitions based on connected components of the medication-pair graph, with approximate 60/20/20 train/validation/test targets and no shared active ingredient across partitions.
-- H2 split: reserve the full clipping family and the harshest 5 dB babble plus RT60 0.8 s condition from training, feature selection, tuning, calibration, and threshold selection.
-- H3 threshold: choose on validation only with a prespecified finite-sample method and fixed false-alert budget. Evaluate the frozen threshold once on test data; E4 checks behavior under shift.
-- Report positive-class prevalence, AUPRC, AUROC, precision, recall, F1, Brier score/calibration, confidence intervals, errors missed, unnecessary alerts, abstentions, and risk-coverage as applicable. Do not rely on accuracy alone.
-- Use grouped bootstrap resampling over independent ingredient groups, paired resamples for model differences, and clustered/grouped analyses when appropriate. Do not treat clips as independent sample units. Apply Holm correction across confirmatory H1–H4; E1–E4 remain exploratory.
-- Preserve original ASR outputs and record recognizer/model version and decoding configuration. Experimental labels are derived from reference comparisons and must not leak into predictor inputs.
-- No test-set inspection for tuning. Freeze feature definitions, model configuration, calibration and thresholds before final test evaluation.
+## Primary evaluation
 
-## Scope and interpretation
+Rank utterances by risk and report error capture at review budgets 1%, 5%, 10%, and 20%: medication errors in selected utterances divided by all medication errors. Report the review subset size, precision among flagged utterances, errors missed, flagged audio duration, false-alert rate, and the error-capture curve. The false-alert denominator is correctly recognized medication mentions; the numerator is correct medication mentions in flagged utterances. Provide a labeled oracle ceiling at the same review budget, computed using gold labels only for an upper bound.
 
-Results will characterize this controlled synthetic benchmark only. Synthetic voices do not represent the full variability of real clinical speech. No result will be described as proving reduced patient harm, real-hospital safety, or clinical effectiveness. Novelty is provisional pending literature review. Feasibility is pending the pilot; if errors or independent groups are insufficient, revise the question or narrow claims rather than manufacture errors or weaken splits without explanation.
+Use speaker- and ingredient-cluster-aware uncertainty estimates. Never treat repeated utterance segments or augmentations as independent observations. Threshold or budget definitions and ingredient holdouts are frozen before test evaluation. Do not claim workload reduction, harm prevention, clinical effectiveness, or patient safety improvement from these offline prioritization measures.
 
-## Change control
+## Feasibility stop rules
 
-This file is frozen by its initial Git commit. Any later change must be made in a new, dated amendment that explains the reason and whether test data have been accessed; retain the original text and commit history.
+Run `src.data_inventory` first. Stop model training if corpus paths/licenses are not verified, medication annotations cannot be resolved to a versioned vocabulary, official speaker separation cannot be validated, the development set lacks both outcome classes, or held-out test ingredients are not represented. Report insufficient sample size rather than altering partitions after test inspection.
 
-### Dated amendment — 2026-10-30: feasibility-run execution settings
+## Deviations and prior work
 
-- The requested H3 false-alert budget was set to 0.05 of mentions, interpreted by the runner as 5 false alerts per 100 mentions. This value was set before the attempted classifier/test evaluation.
-- The configured macOS `say` backend returned success but produced zero-sample audio on this machine. The descriptive pilot therefore used local eSpeak NG 1.52.0 (`en-us`, 175 wpm) to generate nonempty utterances. This is a material TTS/voice change; its outputs are pilot data and are not interchangeable with the originally specified/attempted Samantha synthesis. eSpeak NG is GPL-3.0-or-later; see the [upstream project](https://github.com/espeak-ng/espeak-ng).
-- The pilot generated 40 utterance-condition records from eight medication names/four candidate pairs. Pair-confusion labels contained zero positive cases, so no classifier, calibration model, H2 model, or H4 transfer model could be fit. During diagnosis, aggregate medication-event and pair-label counts spanning the generated records (including the already assigned ingredient-grouped test partition) were inspected. No model, threshold, or feature was tuned in response. Therefore these records are descriptive feasibility results, not an untouched confirmatory test; a future confirmatory analysis requires new/expanded data and a separately frozen evaluation set.
-- Primary-recognizer WER by configured condition and measured SNR/RT60 are reported descriptively in `docs/DAVIDSON_TECHNICAL_PAPER.md` and `results/phase6/submission/wer_by_condition.csv`. No H1/H2/H4 AUPRC, Brier, or McNemar result was produced.
+The previous synthetic TTS/DSP protocol, its results, and pair-level H1–H4 analyses are superseded for the primary study. Historical artifacts may remain for provenance, but must not be presented as evidence for the cross-corpus human-speech question.

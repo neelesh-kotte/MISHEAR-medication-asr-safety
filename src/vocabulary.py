@@ -13,6 +13,153 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
+VOCABULARY_SCHEMA_VERSION = "1.0"
+VOCABULARY_REQUIRED_COLUMNS = (
+    "schema_version", "product_id", "drug_name", "inn", "ingredient_id", "brand_names",
+    "aliases", "combination_ingredient_ids", "metaphone_key", "soundex_key",
+    "source", "source_release",
+)
+
+
+@dataclass(frozen=True)
+class VocabularyValidation:
+    """Machine-readable validation of a versioned vocabulary CSV."""
+
+    valid: bool
+    schema_version: str | None
+    row_count: int
+    errors: tuple[str, ...]
+
+
+def metaphone(text: str) -> str:
+    """Return a deterministic, intentionally compact English Metaphone key.
+
+    This implementation is a candidate-retrieval aid, not a pronunciation
+    standard. Corpus pronunciation variants should be documented separately.
+    """
+    word = normalize_name(text).upper()
+    if not word:
+        return ""
+    word = word.replace("KN", "N", 1).replace("GN", "N", 1).replace("PN", "N", 1)
+    word = word.replace("AE", "E", 1).replace("WR", "R", 1).replace("WH", "W", 1)
+    if word.startswith("X"):
+        word = "S" + word[1:]
+    vowels = "AEIOU"
+    output: list[str] = []
+    i = 0
+    while i < len(word) and len(output) < 12:
+        c = word[i]
+        prev = word[i - 1] if i else ""
+        nxt = word[i + 1] if i + 1 < len(word) else ""
+        if c in vowels:
+            if i == 0:
+                output.append(c)
+        elif c == "B": output.append("B")
+        elif c == "C": output.append("X" if nxt in "IEY" else "K")
+        elif c == "D": output.append("J" if word[i:i + 3] == "DGE" else "T")
+        elif c == "G":
+            if nxt == "H" and i + 2 < len(word) and word[i + 2] not in vowels: pass
+            else: output.append("J" if nxt in "IEY" else "K")
+        elif c == "H":
+            if prev not in vowels and nxt in vowels: output.append("H")
+        elif c in "FJLMNR": output.append(c)
+        elif c in "KPQ": output.append("K")
+        elif c == "S": output.append("X" if word[i:i + 2] in {"SH", "SI"} else "S")
+        elif c in "TZ": output.append("X" if c == "T" and word[i:i + 2] == "TH" else c)
+        elif c == "V": output.append("F")
+        elif c == "W" and nxt in vowels: output.append("W")
+        elif c == "X": output.extend(("K", "S"))
+        # Collapse adjacent duplicate codes, including adjacent raw consonants.
+        if output and i + 1 < len(word) and word[i + 1] == c:
+            i += 1
+        i += 1
+    return "".join(output)
+
+
+def validate_vocabulary_csv(path: str | Path, *, require_resolved: bool = True) -> VocabularyValidation:
+    """Validate v1.0 columns, identifiers, aliases, and provenance.
+
+    ``require_resolved=False`` allows an explicitly incomplete draft to be
+    inspected, but it is never suitable for model training.
+    """
+    errors: list[str] = []
+    with Path(path).open(newline="", encoding="utf-8-sig") as stream:
+        reader = csv.DictReader(stream)
+        headers = tuple(reader.fieldnames or ())
+        rows = list(reader)
+    missing = [field for field in VOCABULARY_REQUIRED_COLUMNS if field not in headers]
+    if missing:
+        errors.append(f"Missing required columns: {', '.join(missing)}")
+    if not rows:
+        errors.append("Vocabulary contains no data rows")
+    product_ids: dict[str, int] = {}
+    seen_names: dict[str, int] = {}
+    alias_owners: dict[str, set[frozenset[str]]] = {}
+    ingredient_ids: set[str] = set()
+    combination_components: list[tuple[int, list[str]]] = []
+    for line, row in enumerate(rows, start=2):
+        if row.get("schema_version", "").strip() != VOCABULARY_SCHEMA_VERSION:
+            errors.append(f"Row {line}: schema_version must be {VOCABULARY_SCHEMA_VERSION}")
+        product_id = row.get("product_id", "").strip()
+        if not product_id:
+            if require_resolved: errors.append(f"Row {line}: product_id is required")
+        elif product_id in product_ids:
+            errors.append(f"Row {line}: duplicate product_id (also row {product_ids[product_id]})")
+        else:
+            product_ids[product_id] = line
+        name = row.get("drug_name", "").strip()
+        ingredient_id = row.get("ingredient_id", "").strip()
+        inn = row.get("inn", "").strip()
+        source = row.get("source", "").strip()
+        release = row.get("source_release", "").strip()
+        if not name:
+            errors.append(f"Row {line}: drug_name is required")
+        normalized = normalize_name(name)
+        if normalized in seen_names:
+            errors.append(f"Row {line}: duplicate drug_name (also row {seen_names[normalized]})")
+        elif normalized:
+            seen_names[normalized] = line
+        components = [part.strip() for part in row.get("combination_ingredient_ids", "").split("|") if part.strip()]
+        if not ingredient_id and not components:
+            if require_resolved: errors.append(f"Row {line}: ingredient_id is unresolved")
+        elif ingredient_id:
+            ingredient_ids.add(ingredient_id)
+        if not inn and require_resolved:
+            errors.append(f"Row {line}: INN is missing")
+        if not source or not release:
+            if require_resolved: errors.append(f"Row {line}: source and source_release are required")
+        aliases = [part.strip() for part in row.get("aliases", "").split("|") if part.strip()]
+        brands = [part.strip() for part in row.get("brand_names", "").split("|") if part.strip()]
+        for alias in aliases + brands:
+            if not normalize_name(alias):
+                errors.append(f"Row {line}: malformed empty alias")
+            elif ingredient_id or components:
+                target_ids = frozenset(components or [ingredient_id])
+                alias_owners.setdefault(normalize_name(alias), set()).add(target_ids)
+        if components and len(components) < 2:
+            errors.append(f"Row {line}: combination product requires at least two ingredient IDs")
+        if components:
+            combination_components.append((line, components))
+            if len(set(components)) != len(components):
+                errors.append(f"Row {line}: duplicate component identifiers in combination product")
+        if components and ingredient_id and ingredient_id in components:
+            errors.append(f"Row {line}: combination component list must not contain its product identifier")
+        for key in ("metaphone_key", "soundex_key"):
+            if require_resolved and not row.get(key, "").strip():
+                errors.append(f"Row {line}: {key} is required")
+            elif row.get(key, "").strip() and any(ch.isspace() for ch in row[key].strip()):
+                errors.append(f"Row {line}: {key} must be a single normalized key")
+    version_values = {row.get("schema_version", "").strip() for row in rows}
+    for alias, target_sets in alias_owners.items():
+        if len(target_sets) > 1:
+            errors.append(f"Alias {alias!r} maps to multiple ingredient IDs")
+    for line, components in combination_components:
+        unknown = sorted(set(components) - ingredient_ids)
+        if unknown and require_resolved:
+            errors.append(f"Row {line}: unknown combination ingredient IDs: {', '.join(unknown)}")
+    version = next(iter(version_values)) if len(version_values) == 1 else None
+    return VocabularyValidation(not errors, version, len(rows), tuple(errors))
+
 
 @dataclass(frozen=True)
 class MedicationName:

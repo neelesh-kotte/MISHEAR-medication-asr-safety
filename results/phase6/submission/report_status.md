@@ -1,4 +1,3 @@
-Calibration curves were not generated because there are no saved H2 prediction scores.
-The classifier stage did not produce model_report.json; H1/H2 metrics, Brier scores, and classifier comparisons are unavailable.
-Pair-confusion feasibility labels contain 0 positives among 40 records; training requires both classes.
-No h4_transfer_report.json exists; H4 metrics were not produced.
+# Archived synthetic-pilot report status
+
+This status file documented the prior synthetic study and is superseded by the cross-corpus human-speech protocol. No model or metric status recorded here applies to AfriSpeech-200 or PriMock57. Run the inventory feasibility gate and create new result artifacts under a separately named human-corpus results directory.

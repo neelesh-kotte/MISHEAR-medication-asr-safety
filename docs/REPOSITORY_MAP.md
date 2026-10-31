@@ -1,40 +1,28 @@
-# Repository map and build order
+# Repository map: cross-corpus human-speech protocol
 
-## Blueprint directories
+## Active layout
 
-- `config/`: dataset, ASR, and experiment configuration.
-- `data/`: public vocabulary, selected pairs, licensed human-risk references, fictional transcripts, audio metadata, and frozen splits. Keep large audio/model artifacts out of Git unless redistribution terms permit it.
-- `src/`: pipeline modules below.
-- `experiments/`: pilot, characterization, generalization, ablation/SHAP, context, auditing, cross-recognizer, and overlap analyses.
-- `results/`: generated tables, figures, and run logs.
-- `paper/`: literature, research gap, methods, results, limitations, and manuscript.
-- `tests/`: data leakage, feature, alignment, DSP measurement, and metric integrity checks (write these before analysis code, as the plan directs).
+- `config/corpus_config.yaml`: local corpus roots/manifests, field mapping, licenses, and pretraining stop rules.
+- `config/asr_config.yaml`: recognizer settings; pin model revisions before inference.
+- `data/vocabulary/`: vocabulary metadata, drug aliases, and resolved ingredient IDs. The checked-in pilot CSV is insufficient for training.
+- `data/external/`: ignored local AfriSpeech-200 and PriMock57 data. Never commit these files.
+- `src/data_inventory.py`: mention/ingredient/speaker inventory and feasibility report.
+- `src/data_splits.py`: AfriSpeech official speaker split validation, ingredient holdout, and consultation-grouped PriMock57 splits.
+- `src/asr_inference.py`: local ASR inference. It accepts no gold reference fields.
+- `src/baselines.py`: confidence, N-best uncertainty, recognizer disagreement, lexical/phonetic anomaly, and combined text-side baseline.
+- `src/auditor.py`: ASR-side span retrieval, acoustic support, and review-priority scoring without transcript correction.
+- `src/alignment.py`, `src/audit_utils.py`: evaluation-only reference alignment and mention error typing.
+- `src/evaluation.py`: top-budget error capture, correctly-recognized-mention false-alert rate, flagged duration, oracle ceiling, and cluster bootstrap.
+- `src/ablations.py`: feature-family ablations after partitions are frozen.
+- `tests/`: unit tests for the data boundaries, blinding, and offline metrics.
 
-## Module dependency order
+## Execution order
 
-1. `vocabulary.py` → RxNorm terms/ingredient identity and variants.
-2. `pair_generation.py` → documented candidate/control pair sampling, graph, seed.
-3. `pronunciation_features.py`, `lexical_features.py` → pair features.
-4. `audio_generation.py` → fictional matched sentences and licensed TTS metadata.
-5. `dsp_augmentation.py`, `acoustic_features.py` → transformations and measured SNR/RT60/quality.
-6. `asr_runner.py` → Whisper and Wav2Vec2, frozen decoding configs and raw outputs.
-7. `test_error_alignment.py` (re-exported from `error_alignment.py`) → join audio metadata to ASR outputs, align medication substitution/deletion/insertion labels, and calculate WER/error rates.
-8. `test_data_splits.py` → ingredient-component train/validation/test splits and separate held-out acoustic-condition splits with leakage checks.
-9. `context_features.py` → phonetic, lexical, and context compatibility features.
-10. `pair_risk_model.py` → baselines and MACP pair-level model.
-11. `calibration.py`, `recording_auditor.py`, `selective_prediction.py` → recording-level score, validation calibration and threshold, abstention/flag output.
-12. `explainability.py`, `human_risk_overlap.py`, `statistical_analysis.py` → prespecified analyses.
+1. Verify licenses and local paths.
+2. Run corpus/vocabulary inventory and honor all stop reasons.
+3. Verify official AfriSpeech speaker separation; freeze ingredient holdouts and consultation groups.
+4. Run ASR and extract blinded baseline/auditor scores.
+5. Join reference labels only for alignment and evaluation.
+6. Report error capture against fixed review budgets with speaker/ingredient-aware uncertainty.
 
-## Phase 5 execution additions
-
-- `src/pair_risk_model.py`: train-only feature preprocessing and interpretable logistic baselines.
-- `src/selective_prediction.py`: validation-only finite-sample false-alert threshold selection.
-- `src/statistical_analysis.py`: AUPRC/AUROC/Brier, exact McNemar, and ingredient-group bootstrap.
-- `src/run_validation_pipeline.py`: configured vocabulary → TTS → DSP → ASR → alignment → pair model runner.
-- `config/pipeline_config.yaml`: local input/model paths, fixed conditions, and threshold budget.
-- `docs/PHASE5_MODELING_AND_RUNNER.md`: Phase 5 method boundaries and execution instructions.
-- `src/calibration.py`: validation-fitted Platt/isotonic calibration and reliability bins.
-- `src/generate_report.py`: artifact-only metrics tables, calibration figure, and submission draft.
-- `docs/PHASE6_EXTENDED_VALIDATION.md`: H2/H4 protocols and final report instructions.
-
-The blueprint’s initial source list also names `acoustic_features.py`; this repository map includes it even though the user’s examples did not mention it. Build stubs only after Phase 1 confirms data sources, licenses, TTS/ASR feasibility, and pilot design.
+Historical `src/run_validation_pipeline.py`, `src/dsp_augmentation.py`, and Phase 2–6 synthetic reports are retained as provenance. They are not the active human-corpus protocol and must not be used to substantiate its claims.

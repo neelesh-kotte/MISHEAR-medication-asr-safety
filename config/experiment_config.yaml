@@ -1,4 +1,5 @@
-# Planning values only; exact split IDs/threshold must be frozen before test access.
+# LEGACY SYNTHETIC-PAIR EXPERIMENT CONFIG — superseded by prespecification.md.
+# Human-corpus split and review-budget IDs must be frozen in new manifests.
 seed: 20261030
 ingredient_split_fraction: {train: 0.60, validation: 0.20, test: 0.20}
 held_out_acoustic_conditions:
