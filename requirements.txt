@@ -1,1 +1,4 @@
-# Phase 1 scaffold only. Pin dependencies after the feasibility pilot and license/platform checks.
+# Core numerical/audio stack for Phase 2; pin exact resolved versions before freezing a run.
+numpy>=1.24
+scipy>=1.10
+soundfile>=0.12
