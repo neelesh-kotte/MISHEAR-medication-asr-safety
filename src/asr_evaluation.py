@@ -240,6 +240,7 @@ class Wav2Vec2CTCRunner:
         *,
         device: str | None = None,
         save_frame_confidence: bool = True,
+        revision: str | None = None,
     ):
         try:
             import torch
@@ -248,14 +249,16 @@ class Wav2Vec2CTCRunner:
             raise RuntimeError("Install Wav2Vec2 dependencies with `python -m pip install torch transformers`.") from exc
         self.torch = torch
         self.model_id = model_id
-        self.processor = AutoProcessor.from_pretrained(model_id)
-        self.model = AutoModelForCTC.from_pretrained(model_id)
+        self.revision = revision
+        load_options = {"revision": revision} if revision else {}
+        self.processor = AutoProcessor.from_pretrained(model_id, **load_options)
+        self.model = AutoModelForCTC.from_pretrained(model_id, **load_options)
         if device is None:
             device = "mps" if torch.backends.mps.is_available() else "cpu"
         self.device = device
         self.model.to(device).eval()
         self.save_frame_confidence = save_frame_confidence
-        self.model_version = getattr(self.model.config, "_commit_hash", None) or "model-revision-unpinned"
+        self.model_version = getattr(self.model.config, "_commit_hash", None) or revision or "model-revision-unpinned"
         self.sample_rate = int(self.processor.feature_extractor.sampling_rate)
 
     def transcribe(self, audio_path: str | Path) -> dict[str, Any]:
@@ -287,7 +290,8 @@ class Wav2Vec2CTCRunner:
             recognizer="wav2vec2-ctc",
             model_id=self.model_id,
             model_version=self.model_version,
-            decoding_config={"device": self.device, "sample_rate_hz": self.sample_rate, "decoder": "greedy CTC"},
+            decoding_config={"device": self.device, "sample_rate_hz": self.sample_rate,
+                             "decoder": "greedy CTC", "revision": self.revision},
             transcript=transcript,
             raw_output_path=str(raw_path),
             duration_s=len(audio) / self.sample_rate,

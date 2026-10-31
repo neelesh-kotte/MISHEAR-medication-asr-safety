@@ -10,3 +10,8 @@ transformers>=4.44
 
 # Pronunciation lexicon for CMUdict-backed ARPAbet features.
 cmudict>=1.0
+
+# Phase 5 pair-level models, grouped statistical reporting, and YAML runner config.
+scikit-learn>=1.4
+PyYAML>=6.0
+matplotlib>=3.7

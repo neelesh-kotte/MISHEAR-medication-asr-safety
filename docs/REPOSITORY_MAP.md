@@ -25,4 +25,16 @@
 11. `calibration.py`, `recording_auditor.py`, `selective_prediction.py` → recording-level score, validation calibration and threshold, abstention/flag output.
 12. `explainability.py`, `human_risk_overlap.py`, `statistical_analysis.py` → prespecified analyses.
 
+## Phase 5 execution additions
+
+- `src/pair_risk_model.py`: train-only feature preprocessing and interpretable logistic baselines.
+- `src/selective_prediction.py`: validation-only finite-sample false-alert threshold selection.
+- `src/statistical_analysis.py`: AUPRC/AUROC/Brier, exact McNemar, and ingredient-group bootstrap.
+- `src/run_validation_pipeline.py`: configured vocabulary → TTS → DSP → ASR → alignment → pair model runner.
+- `config/pipeline_config.yaml`: local input/model paths, fixed conditions, and threshold budget.
+- `docs/PHASE5_MODELING_AND_RUNNER.md`: Phase 5 method boundaries and execution instructions.
+- `src/calibration.py`: validation-fitted Platt/isotonic calibration and reliability bins.
+- `src/generate_report.py`: artifact-only metrics tables, calibration figure, and submission draft.
+- `docs/PHASE6_EXTENDED_VALIDATION.md`: H2/H4 protocols and final report instructions.
+
 The blueprint’s initial source list also names `acoustic_features.py`; this repository map includes it even though the user’s examples did not mention it. Build stubs only after Phase 1 confirms data sources, licenses, TTS/ASR feasibility, and pilot design.
