@@ -49,3 +49,10 @@ Results will characterize this controlled synthetic benchmark only. Synthetic vo
 ## Change control
 
 This file is frozen by its initial Git commit. Any later change must be made in a new, dated amendment that explains the reason and whether test data have been accessed; retain the original text and commit history.
+
+### Dated amendment — 2026-10-30: feasibility-run execution settings
+
+- The requested H3 false-alert budget was set to 0.05 of mentions, interpreted by the runner as 5 false alerts per 100 mentions. This value was set before the attempted classifier/test evaluation.
+- The configured macOS `say` backend returned success but produced zero-sample audio on this machine. The descriptive pilot therefore used local eSpeak NG 1.52.0 (`en-us`, 175 wpm) to generate nonempty utterances. This is a material TTS/voice change; its outputs are pilot data and are not interchangeable with the originally specified/attempted Samantha synthesis. eSpeak NG is GPL-3.0-or-later; see the [upstream project](https://github.com/espeak-ng/espeak-ng).
+- The pilot generated 40 utterance-condition records from eight medication names/four candidate pairs. Pair-confusion labels contained zero positive cases, so no classifier, calibration model, H2 model, or H4 transfer model could be fit. During diagnosis, aggregate medication-event and pair-label counts spanning the generated records (including the already assigned ingredient-grouped test partition) were inspected. No model, threshold, or feature was tuned in response. Therefore these records are descriptive feasibility results, not an untouched confirmatory test; a future confirmatory analysis requires new/expanded data and a separately frozen evaluation set.
+- Primary-recognizer WER by configured condition and measured SNR/RT60 are reported descriptively in `docs/DAVIDSON_TECHNICAL_PAPER.md` and `results/phase6/submission/wer_by_condition.csv`. No H1/H2/H4 AUPRC, Brier, or McNemar result was produced.

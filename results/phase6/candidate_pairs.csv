@@ -1,0 +1,5 @@
+name_a,name_b,ingredient_a,ingredient_b,jaro_winkler,soundex_a,soundex_b,phonetic_similarity,candidate_score,high_similarity_candidate,pair_id
+hydroxyzine,hydralazine,hydroxyzine,hydralazine,0.8909,H362,H364,0.75,0.8205,True,pair_00000
+metformin,metoclopramide,metformin,metoclopramide,0.8315,M316,M324,0.5,0.6657,True,pair_00001
+azithromycin,erythromycin,azithromycin,erythromycin,0.7778,A236,E636,0.5,0.6389,True,pair_00002
+clonidine,klonopin,clonidine,klonopin,0.7269,C453,K451,0.5,0.6134,True,pair_00003

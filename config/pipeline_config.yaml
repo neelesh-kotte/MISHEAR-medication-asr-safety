@@ -1,76 +1,74 @@
-# Copy and edit paths/settings before running. Keep the alert budget frozen
-# before inspecting any test predictions, as required by prespecification.md.
-seed: 20261030
-vocabulary_csv: data/vocabulary/medication_vocabulary.csv
-output_dir: results/phase6
-max_pairs: null # set a small integer for a feasibility pilot
+asr:
+  backend: "openai_whisper"
+  model_name: base
+  device: cpu
+  continue_on_error: false
+bootstrap_replicates: 2000
+dsp_conditions:
+- clipping_threshold: null
+  condition_family: clean
+  condition_id: clean
+  noise_kind: null
+  rt60_target_s: null
+  target_snr_db: null
+- babble_speakers: 3
+  clipping_threshold: null
+  condition_family: babble_reverb
+  condition_id: babble_5db_rt60_08
+  noise_kind: babble
+  rt60_target_s: 0.8
+  target_snr_db: 5
+- babble_speakers: 3
+  clipping_threshold: null
+  condition_family: babble
+  condition_id: babble_15db
+  noise_kind: babble
+  rt60_target_s: null
+  target_snr_db: 15
+- babble_speakers: 3
+  clipping_threshold: null
+  condition_family: babble_reverb
+  condition_id: babble_10db_rt60_04
+  noise_kind: babble
+  rt60_target_s: 0.4
+  target_snr_db: 10
+- clipping_threshold: 0.75
+  condition_family: clipping
+  condition_id: clipping_075
+  noise_kind: null
+  rt60_target_s: null
+  target_snr_db: null
+false_alert_budget: 0.05 # fraction of mentions; runner converts 5% to 5 alerts per 100
+h2:
+  calibration_bins: 10
+  held_out_condition_ids:
+  - babble_5db_rt60_08
+  held_out_families:
+  - clipping
+  validation_fraction: 0.2
+max_pairs: null
 min_jaro_winkler: 0.72
 min_phonetic_similarity: 0.66
+output_dir: results/phase6
+rates_wpm:
+- 175
 sample_rate_hz: 16000
-voices: [Samantha]
-rates_wpm: [175]
-templates:
-  - template_id: neutral_01
-    text: "Please say {drug} now."
-    context_condition: neutral
-dsp_conditions:
-  - condition_id: clean
-    condition_family: clean
-    noise_kind: null
-    target_snr_db: null
-    rt60_target_s: null
-    clipping_threshold: null
-  - condition_id: babble_5db_rt60_08
-    condition_family: babble_reverb
-    noise_kind: babble
-    target_snr_db: 5
-    rt60_target_s: 0.8
-    clipping_threshold: null
-    babble_speakers: 3
-  - condition_id: babble_15db
-    condition_family: babble
-    noise_kind: babble
-    target_snr_db: 15
-    rt60_target_s: null
-    clipping_threshold: null
-    babble_speakers: 3
-  - condition_id: babble_10db_rt60_04
-    condition_family: babble_reverb
-    noise_kind: babble
-    target_snr_db: 10
-    rt60_target_s: 0.4
-    clipping_threshold: null
-    babble_speakers: 3
-  - condition_id: clipping_075
-    condition_family: clipping
-    noise_kind: null
-    target_snr_db: null
-    rt60_target_s: null
-    clipping_threshold: 0.75
-asr:
-  backend: whisper_cpp # or openai_whisper
-  executable: whisper-cli
-  model_path: models/ggml-base.en.bin
-  threads: 4
-  beam_size: 5
-  no_gpu: false
-  continue_on_error: false
-  # openai_whisper alternative:
-  # model_name: base
-  # device: null
-h2:
-  held_out_condition_ids: [babble_5db_rt60_08]
-  held_out_families: [clipping]
-  validation_fraction: 0.2
-  calibration_bins: 10
-# Optional H4 model transfer. Alternative architecture example:
 secondary_asr:
   backend: wav2vec2_ctc
-  model_id: facebook/wav2vec2-base-960h
-  revision: null # pin a model commit/revision for a frozen run
-  device: null # defaults to MPS when available, otherwise CPU
-  save_frame_confidence: true
   continue_on_error: false
-false_alert_budget_per_100_mentions: null # REQUIRED: freeze a numeric value before test evaluation
+  device: null
+  model_id: facebook/wav2vec2-base-960h
+  revision: null
+  save_frame_confidence: true
+seed: 20261030
 selective_alpha: 0.05
-bootstrap_replicates: 2000
+templates:
+- context_condition: neutral
+  template_id: neutral_01
+  text: Please say {drug} now.
+vocabulary_csv: data/vocabulary/medication_vocabulary.csv
+voices:
+- en-us
+tts:
+  backend: espeak-ng
+  executable: espeak-ng

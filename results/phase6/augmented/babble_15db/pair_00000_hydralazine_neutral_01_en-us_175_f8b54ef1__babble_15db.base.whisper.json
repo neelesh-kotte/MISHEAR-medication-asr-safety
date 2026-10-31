@@ -1,0 +1,29 @@
+{
+  "text": " Please say hi to the living now.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.0,
+      "text": " Please say hi to the living now.",
+      "tokens": [
+        50364,
+        2555,
+        584,
+        4879,
+        281,
+        264,
+        2647,
+        586,
+        13,
+        50464
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.9883154088800604,
+      "compression_ratio": 0.8,
+      "no_speech_prob": 0.2701267898082733
+    }
+  ],
+  "language": "en"
+}

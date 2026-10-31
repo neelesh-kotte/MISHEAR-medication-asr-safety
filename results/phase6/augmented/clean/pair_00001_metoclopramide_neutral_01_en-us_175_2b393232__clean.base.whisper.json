@@ -1,0 +1,29 @@
+{
+  "text": " Please say met a club from Idaho.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.0,
+      "text": " Please say met a club from Idaho.",
+      "tokens": [
+        50364,
+        2555,
+        584,
+        1131,
+        257,
+        6482,
+        490,
+        36628,
+        13,
+        50464
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.9595833691683683,
+      "compression_ratio": 0.8048780487804879,
+      "no_speech_prob": 0.036130502820014954
+    }
+  ],
+  "language": "en"
+}

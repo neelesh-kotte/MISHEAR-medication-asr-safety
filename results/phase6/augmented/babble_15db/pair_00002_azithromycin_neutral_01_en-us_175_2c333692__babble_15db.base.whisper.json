@@ -1,0 +1,30 @@
+{
+  "text": " Please say as it reminds us of you.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.0,
+      "text": " Please say as it reminds us of you.",
+      "tokens": [
+        50364,
+        2555,
+        584,
+        382,
+        309,
+        12025,
+        505,
+        295,
+        291,
+        13,
+        50464
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.9234913190205892,
+      "compression_ratio": 0.813953488372093,
+      "no_speech_prob": 0.07749048620462418
+    }
+  ],
+  "language": "en"
+}

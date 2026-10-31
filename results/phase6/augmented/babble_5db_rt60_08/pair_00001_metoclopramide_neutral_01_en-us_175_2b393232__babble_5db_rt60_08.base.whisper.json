@@ -1,0 +1,50 @@
+{
+  "text": " Hopefully it is any better. I got my hide and seek masterlists",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 0.76,
+      "text": " Hopefully it is any better.",
+      "tokens": [
+        50364,
+        10429,
+        309,
+        307,
+        604,
+        1101,
+        13,
+        50402
+      ],
+      "temperature": 1.0,
+      "avg_logprob": -3.573948910361842,
+      "compression_ratio": 0.9393939393939394,
+      "no_speech_prob": 0.20767086744308472
+    },
+    {
+      "id": 1,
+      "seek": 0,
+      "start": 0.76,
+      "end": 2.68,
+      "text": " I got my hide and seek masterlists",
+      "tokens": [
+        50402,
+        286,
+        658,
+        452,
+        6479,
+        293,
+        8075,
+        4505,
+        36693,
+        50498
+      ],
+      "temperature": 1.0,
+      "avg_logprob": -3.573948910361842,
+      "compression_ratio": 0.9393939393939394,
+      "no_speech_prob": 0.20767086744308472
+    }
+  ],
+  "language": "en"
+}

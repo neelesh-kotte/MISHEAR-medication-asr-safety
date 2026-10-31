@@ -148,17 +148,70 @@ def synthesize_say(job: SynthesisJob, output_wav: str | Path, sample_rate: int =
     }
 
 
+def synthesize_espeak_ng(
+    job: SynthesisJob,
+    output_wav: str | Path,
+    sample_rate: int = 16_000,
+    *,
+    executable: str = "espeak-ng",
+) -> dict[str, object]:
+    """Synthesize to WAV with the locally installed eSpeak NG command.
+
+    Voice terms are separate from macOS ``say`` voices (for example ``en-us``).
+    The generated samples are validated as non-empty before metadata is written.
+    """
+    resolved = shutil.which(executable)
+    if resolved is None:
+        raise RuntimeError(f"eSpeak NG executable {executable!r} was not found on PATH")
+    try:
+        import soundfile as sf
+        from math import gcd
+        from scipy.signal import resample_poly
+    except ImportError as exc:
+        raise RuntimeError("Install soundfile and scipy to write eSpeak NG output") from exc
+
+    target = Path(output_wav)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="mishear_espeak_") as temp_dir:
+        wav_path = Path(temp_dir) / "espeak_output.wav"
+        command = [resolved, "-v", job.voice, "-s", str(job.rate_wpm), "-w", str(wav_path), job.sentence]
+        completed = subprocess.run(command, capture_output=True, text=True, check=False)
+        if completed.returncode:
+            raise RuntimeError(f"eSpeak NG failed ({completed.returncode}): {completed.stderr.strip()}")
+        audio, source_rate = sf.read(wav_path, dtype="float32", always_2d=True)
+        mono = audio.mean(axis=1)
+        if not len(mono):
+            raise RuntimeError(f"eSpeak NG generated an empty waveform for {job.utterance_id}")
+        if source_rate != sample_rate:
+            divisor = gcd(int(source_rate), int(sample_rate))
+            mono = resample_poly(mono, sample_rate // divisor, source_rate // divisor).astype("float32")
+        sf.write(target, mono, sample_rate, subtype="PCM_16", format="WAV")
+
+    version_result = subprocess.run([resolved, "--version"], capture_output=True, text=True, check=False)
+    version = (version_result.stdout or version_result.stderr).strip().splitlines()[0]
+    return {
+        **asdict(job), "audio_path": str(target), "sample_rate_hz": sample_rate,
+        "duration_s": round(len(mono) / sample_rate, 6), "tts_engine": "eSpeak NG",
+        "tts_engine_version": version, "tts_voice": job.voice,
+        "tts_rate_wpm": job.rate_wpm, "synthetic": True,
+    }
+
+
 def generate_jobs(
-    jobs: Iterable[SynthesisJob], output_dir: str | Path, sample_rate: int = 16_000
+    jobs: Iterable[SynthesisJob], output_dir: str | Path, sample_rate: int = 16_000,
+    *, backend: str = "say", executable: str | None = None,
 ) -> list[dict[str, object]]:
     """Generate a sequence of jobs and save a metadata CSV next to the audio."""
     root = Path(output_dir)
     audio_dir = root / "audio"
     audio_dir.mkdir(parents=True, exist_ok=True)
-    records = [
-        synthesize_say(job, audio_dir / f"{job.utterance_id}.wav", sample_rate)
-        for job in jobs
-    ]
+    if backend not in {"say", "espeak-ng"}:
+        raise ValueError("backend must be 'say' or 'espeak-ng'")
+    if backend == "say":
+        records = [synthesize_say(job, audio_dir / f"{job.utterance_id}.wav", sample_rate) for job in jobs]
+    else:
+        records = [synthesize_espeak_ng(job, audio_dir / f"{job.utterance_id}.wav", sample_rate,
+                                         executable=executable or "espeak-ng") for job in jobs]
     if records:
         metadata_path = root / "synthetic_audio_metadata.csv"
         fieldnames = list(records[0])

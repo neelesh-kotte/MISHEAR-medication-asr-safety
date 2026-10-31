@@ -1,0 +1,9 @@
+drug_name,ingredient,phonetic_key,category
+hydroxyzine,hydroxyzine,H-D-R-K-S-N,antihistamine
+hydralazine,hydralazine,H-D-R-L-Z-N,antihypertensive
+metformin,metformin,M-T-F-R-N,antidiabetic
+metoclopramide,metoclopramide,M-T-K-L-P-R-M,antiemetic
+azithromycin,azithromycin,Z-T-R-M-S-N,antibiotic
+erythromycin,erythromycin,R-TH-M-S-N,antibiotic
+clonidine,clonidine,K-L-N-D-N,antihypertensive
+klonopin,klonopin,K-L-N-P-N,anticonvulsant

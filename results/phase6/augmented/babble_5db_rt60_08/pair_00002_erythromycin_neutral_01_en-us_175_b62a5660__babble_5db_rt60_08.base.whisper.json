@@ -1,0 +1,35 @@
+{
+  "text": " Calinacero to the high-scully-carlanted",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 5.18,
+      "text": " Calinacero to the high-scully-carlanted",
+      "tokens": [
+        50364,
+        3511,
+        259,
+        326,
+        2032,
+        281,
+        264,
+        1090,
+        12,
+        4417,
+        2150,
+        12,
+        66,
+        6843,
+        15587,
+        50623
+      ],
+      "temperature": 1.0,
+      "avg_logprob": -3.337804008932675,
+      "compression_ratio": 0.8666666666666667,
+      "no_speech_prob": 0.054094865918159485
+    }
+  ],
+  "language": "en"
+}

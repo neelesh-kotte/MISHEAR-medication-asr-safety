@@ -1,0 +1,24 @@
+{
+  "text": " please say sist",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 24.12,
+      "text": " please say sist",
+      "tokens": [
+        50364,
+        1767,
+        584,
+        10555,
+        51570
+      ],
+      "temperature": 1.0,
+      "avg_logprob": -3.5326452255249023,
+      "compression_ratio": 0.6521739130434783,
+      "no_speech_prob": 0.0698218122124672
+    }
+  ],
+  "language": "en"
+}

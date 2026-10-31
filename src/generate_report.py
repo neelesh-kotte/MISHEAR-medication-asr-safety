@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -28,7 +29,7 @@ def _read_csv(path: Path) -> list[dict[str, str]]:
 
 def _fmt(value: Any) -> str:
     if value is None:
-        return "not reported"
+        return "unavailable"
     try:
         number = float(value)
         return "not estimable" if number != number else f"{number:.4f}"
@@ -98,12 +99,70 @@ def _plot_calibration(rows: Sequence[Mapping[str, Any]], output_path: Path) -> N
     plt.close(fig)
 
 
+def _mean_float(rows: Sequence[Mapping[str, Any]], field: str) -> float | None:
+    values = []
+    for row in rows:
+        try:
+            value = float(row.get(field))
+            if value == value and abs(value) != float("inf"):
+                values.append(value)
+        except (TypeError, ValueError):
+            pass
+    return sum(values) / len(values) if values else None
+
+
+def _wer_by_condition(aligned_path: Path) -> list[dict[str, Any]]:
+    if not aligned_path.exists():
+        return []
+    groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for line in aligned_path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            row = json.loads(line)
+            groups[str(row.get("condition_id", row.get("condition_family", "unknown")))].append(row)
+    output = []
+    for condition, records in sorted(groups.items()):
+        substitutions = sum(int(row.get("word_substitutions", 0)) for row in records)
+        deletions = sum(int(row.get("word_deletions", 0)) for row in records)
+        insertions = sum(int(row.get("word_insertions", 0)) for row in records)
+        reference_words = sum(int(row.get("reference_word_count", 0)) for row in records)
+        output.append({"condition_id": condition, "recordings": len(records),
+                       "reference_words": reference_words, "word_substitutions": substitutions,
+                       "word_deletions": deletions, "word_insertions": insertions,
+                       "wer": ((substitutions + deletions + insertions) / reference_words) if reference_words else None,
+                       "medication_substitutions": sum(int(row.get("medication_substitutions", 0)) for row in records),
+                       "medication_deletions": sum(int(row.get("medication_deletions", 0)) for row in records),
+                       "mean_measured_snr_db": _mean_float(records, "measured_snr_db"),
+                       "mean_measured_rt60_s": _mean_float(records, "measured_rt60_s")})
+    return output
+
+
+def _plot_wer(rows: Sequence[Mapping[str, Any]], output_path: Path) -> None:
+    if not rows:
+        return
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig, axis = plt.subplots(figsize=(8, 4.8))
+    axis.bar([str(row["condition_id"]) for row in rows], [float(row["wer"]) for row in rows])
+    axis.set(ylabel="Word error rate", title="WER by configured acoustic condition")
+    axis.tick_params(axis="x", labelrotation=30)
+    axis.grid(axis="y", alpha=0.2)
+    fig.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+
+
 def generate_report(results_dir: str | Path, *, calibration_bins: int = 10) -> dict[str, Path]:
     root = Path(results_dir)
     phase5 = _read_json(root / "model_report.json")
-    h4 = _read_json(root / "h4_transfer_report.json")
-    if phase5 is None:
-        raise FileNotFoundError(f"Missing pipeline summary: {root / 'model_report.json'}")
+    h4 = _read_json(root / "h4_transfer_report.json") or {}
+    phase5 = phase5 or {}
+    wer_rows = _wer_by_condition(root / "alignment" / "aligned_records.jsonl")
+    pair_feature_rows = _read_csv(root / "pair_features_and_labels.csv")
+    pair_positive_count = sum(int(float(row.get("label", 0))) for row in pair_feature_rows)
+    if not phase5 and not wer_rows:
+        raise FileNotFoundError(f"No model report or aligned records found under {root}")
     metric_rows: list[dict[str, Any]] = []
     _append_metric(metric_rows, "H1 ingredient-disjoint", "full model", phase5.get("test_full_model"))
     _append_metric(metric_rows, "H1 ingredient-disjoint", "phonetic-only model", phase5.get("test_phonetic_only"))
@@ -119,7 +178,7 @@ def generate_report(results_dir: str | Path, *, calibration_bins: int = 10) -> d
                 {"phase": "H1 ingredient-disjoint", "model": name, "metric": "bootstrap 95% lower", "value": delta.get("lower_95")},
                 {"phase": "H1 ingredient-disjoint", "model": name, "metric": "bootstrap 95% upper", "value": delta.get("upper_95")},
             ])
-    h2 = phase5.get("H2_unseen_acoustic_conditions", {})
+    h2 = phase5.get("H2_unseen_acoustic_conditions", {"status": "not run (classifier stage did not complete)"})
     if h2.get("test_raw_model"):
         _append_metric(metric_rows, "H2 unseen conditions", "raw full model", h2.get("test_raw_model"))
         for split, count in h2.get("independent_components", {}).items():
@@ -146,8 +205,20 @@ def generate_report(results_dir: str | Path, *, calibration_bins: int = 10) -> d
                 {"phase": "H4 cross-recognizer transfer", "model": "secondary recognizer", "metric": "AUPRC bootstrap 95% lower", "value": interval.get("lower_95")},
                 {"phase": "H4 cross-recognizer transfer", "model": "secondary recognizer", "metric": "AUPRC bootstrap 95% upper", "value": interval.get("upper_95")},
             ])
+    metric_rows.extend({"phase": "ASR descriptive", "model": "primary recognizer",
+                        "metric": f"{row['condition_id']} WER", "value": row.get("wer")}
+                       for row in wer_rows)
+    if pair_feature_rows:
+        metric_rows.append({"phase": "Pair-confusion feasibility", "model": "label distribution",
+                            "metric": "positive pair substitutions", "value": pair_positive_count})
+        metric_rows.append({"phase": "Pair-confusion feasibility", "model": "label distribution",
+                            "metric": "total labeled recordings", "value": len(pair_feature_rows)})
     metric_csv = root / "submission" / "evaluation_metrics.csv"
     _write_csv(metric_csv, metric_rows)
+    wer_csv = root / "submission" / "wer_by_condition.csv"
+    _write_csv(wer_csv, wer_rows)
+    wer_png = root / "submission" / "wer_by_condition.png"
+    _plot_wer(wer_rows, wer_png)
 
     h2_predictions = _read_csv(root / "h2_calibration_predictions.csv")
     curve_rows = _calibration_rows(h2_predictions, calibration_bins)
@@ -165,6 +236,15 @@ def generate_report(results_dir: str | Path, *, calibration_bins: int = 10) -> d
     h1_groups = phase5.get("independent_components", {})
     h2_metrics = h2.get("test_raw_model", {})
     h4_metrics = h4.get("test_metrics", {}) if h4 else {}
+    total_reference_words = sum(int(row.get("reference_words", 0)) for row in wer_rows)
+    total_word_errors = sum(int(row.get("word_substitutions", 0)) + int(row.get("word_deletions", 0))
+                            + int(row.get("word_insertions", 0)) for row in wer_rows)
+    overall_wer = total_word_errors / total_reference_words if total_reference_words else None
+    wer_summary = "; ".join(f"{row['condition_id']}={_fmt(row.get('wer'))}" for row in wer_rows) or "unavailable"
+    if phase5.get("validation_selected_threshold"):
+        selective_summary = "Report the validation-selected threshold and test counts in `model_report.json`."
+    else:
+        selective_summary = "H3 selective auditing was not evaluated: the pair-risk classifier did not produce validation scores or a frozen threshold."
     lines = [
         "# MISHEAR Results Summary Draft",
         "",
@@ -176,10 +256,11 @@ def generate_report(results_dir: str | Path, *, calibration_bins: int = 10) -> d
         "",
         "## Results to report",
         "",
-        f"- **H1, ingredient-disjoint test:** full-model AUPRC {_fmt(h1_metrics.get('auprc'))} (n={h1_metrics.get('n', 'not reported')}, ingredient components={h1_groups.get('test', 'not reported')}, prevalence {_fmt(h1_metrics.get('prevalence'))}); AUROC {_fmt(h1_metrics.get('auroc'))}. The grouped-bootstrap AUPRC difference versus the phonetic-only model was {_fmt(h1_delta.get('delta_a_minus_b'))} (95% interval {_fmt(h1_delta.get('lower_95'))} to {_fmt(h1_delta.get('upper_95'))}); versus the Soundex ranking baseline it was {_fmt(h1_similarity_delta.get('delta_a_minus_b'))} ({_fmt(h1_similarity_delta.get('lower_95'))} to {_fmt(h1_similarity_delta.get('upper_95'))}).",
+        f"- **Descriptive primary-recognizer WER:** { _fmt(overall_wer) } overall across {sum(int(row.get('recordings', 0)) for row in wer_rows)} recordings ({total_reference_words} reference words); by condition: {wer_summary}. This is a synthetic pilot summary, not a held-out generalization estimate.",
+        f"- **H1, ingredient-disjoint test:** full-model AUPRC {_fmt(h1_metrics.get('auprc'))} (n={h1_metrics.get('n', 'unavailable')}, ingredient components={h1_groups.get('test', 'unavailable')}, prevalence {_fmt(h1_metrics.get('prevalence'))}); AUROC {_fmt(h1_metrics.get('auroc'))}. The grouped-bootstrap AUPRC difference versus the phonetic-only model was {_fmt(h1_delta.get('delta_a_minus_b'))} (95% interval {_fmt(h1_delta.get('lower_95'))} to {_fmt(h1_delta.get('upper_95'))}); versus the Soundex ranking baseline it was {_fmt(h1_similarity_delta.get('delta_a_minus_b'))} ({_fmt(h1_similarity_delta.get('lower_95'))} to {_fmt(h1_similarity_delta.get('upper_95'))}). Pair-confusion positives: {pair_positive_count}/{len(pair_feature_rows)}; no model result was estimable without both classes.",
         f"- **H2, unseen acoustic conditions:** status {h2_status}; raw-model AUPRC {_fmt(h2_metrics.get('auprc'))} (n={h2_metrics.get('n', 'not reported')}, ingredient components={h2.get('independent_components', {}).get('test', 'not reported')}), compared with held-out prevalence {_fmt(h2.get('test_prevalence_baseline_auprc'))}. Calibration methods evaluated: {', '.join(h2_cal) if h2_cal else 'none'}.",
         f"- **H4, cross-recognizer transfer:** {h4_status}; secondary recognizer {h4.get('secondary_recognizer', 'not reported')}; AUPRC {_fmt(h4_metrics.get('auprc'))}, AUROC {_fmt(h4_metrics.get('auroc'))} (n={h4_metrics.get('n', 'not reported')}, ingredient components={h4.get('independent_test_components', 'not reported')}).",
-        "- **Selective alerting:** report the validation-selected alert threshold and its finite-sample bound from `model_report.json`, plus the held-out false-alert count and missed substitutions. Do not describe a validation bound as a guarantee under distribution shift.",
+        f"- **Selective alerting:** {selective_summary} Do not describe a validation bound as a guarantee under distribution shift.",
         "",
         "## Interpretation and limits",
         "",
@@ -188,7 +269,9 @@ def generate_report(results_dir: str | Path, *, calibration_bins: int = 10) -> d
         "## Suggested figures and tables",
         "",
         "- `evaluation_metrics.csv`: model-by-hypothesis metrics table.",
-        "- `h2_calibration_curves.png` and `h2_calibration_curve_data.csv`: equal-width-bin reliability curves on held-out acoustic conditions.",
+        "- `wer_by_condition.csv` and `wer_by_condition.png`: descriptive primary-recognizer WER by acoustic condition.",
+        "- `h2_calibration_curves.png` and `h2_calibration_curve_data.csv`: generated only when held-out H2 probability predictions exist.",
+        "- `report_status.md`: states when a calibration artifact could not be produced from available outputs.",
         "- `../test_predictions.csv`, `../h2_calibration_predictions.csv`, and `../h4_transfer_predictions.csv`: per-example predictions for audit and supplementary analysis.",
         "",
         "## Items to complete before submission",
@@ -198,8 +281,24 @@ def generate_report(results_dir: str | Path, *, calibration_bins: int = 10) -> d
     draft_path = root / "submission" / "DAVIDSON_FELLOWS_RESULTS_DRAFT.md"
     draft_path.parent.mkdir(parents=True, exist_ok=True)
     draft_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return {"metrics_csv": metric_csv, "calibration_csv": curve_csv,
-            "calibration_png": curve_png, "submission_draft": draft_path}
+    outputs = {"metrics_csv": metric_csv, "wer_csv": wer_csv, "submission_draft": draft_path}
+    if wer_rows:
+        outputs["wer_png"] = wer_png
+    if curve_rows:
+        outputs["calibration_csv"] = curve_csv
+        outputs["calibration_png"] = curve_png
+    else:
+        status_path = root / "submission" / "report_status.md"
+        status_lines = ["Calibration curves were not generated because there are no saved H2 prediction scores."]
+        if not phase5:
+            status_lines.append("The classifier stage did not produce model_report.json; H1/H2 metrics, Brier scores, and classifier comparisons are unavailable.")
+        if pair_feature_rows and pair_positive_count == 0:
+            status_lines.append(f"Pair-confusion feasibility labels contain 0 positives among {len(pair_feature_rows)} records; training requires both classes.")
+        if not h4:
+            status_lines.append("No h4_transfer_report.json exists; H4 metrics were not produced.")
+        status_path.write_text("\n".join(status_lines) + "\n", encoding="utf-8")
+        outputs["report_status"] = status_path
+    return outputs
 
 
 def main() -> None:

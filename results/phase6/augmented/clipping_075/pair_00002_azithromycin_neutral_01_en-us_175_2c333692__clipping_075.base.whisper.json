@@ -1,0 +1,26 @@
+{
+  "text": " Please understand it fromould",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 1.86,
+      "text": " Please understand it fromould",
+      "tokens": [
+        50364,
+        2555,
+        1223,
+        309,
+        490,
+        429,
+        50457
+      ],
+      "temperature": 1.0,
+      "avg_logprob": -3.518531322479248,
+      "compression_ratio": 0.7837837837837838,
+      "no_speech_prob": 0.038815610110759735
+    }
+  ],
+  "language": "en"
+}

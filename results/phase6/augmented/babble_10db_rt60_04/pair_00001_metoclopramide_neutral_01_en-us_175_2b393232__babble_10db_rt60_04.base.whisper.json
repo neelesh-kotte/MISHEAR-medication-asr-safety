@@ -1,0 +1,34 @@
+{
+  "text": " Say, N kimse, a clock, what might now apply?",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.36,
+      "text": " Say, N kimse, a clock, what might now apply?",
+      "tokens": [
+        50364,
+        6463,
+        11,
+        426,
+        42005,
+        11,
+        257,
+        7830,
+        11,
+        437,
+        1062,
+        586,
+        3079,
+        30,
+        50482
+      ],
+      "temperature": 1.0,
+      "avg_logprob": -2.8954873085021973,
+      "compression_ratio": 0.8461538461538461,
+      "no_speech_prob": 0.07101418077945709
+    }
+  ],
+  "language": "en"
+}

@@ -1,0 +1,30 @@
+{
+  "text": " Please stay seated with our own circle ritual.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.5,
+      "text": " Please stay seated with our own circle ritual.",
+      "tokens": [
+        50364,
+        2555,
+        1754,
+        20959,
+        365,
+        527,
+        1065,
+        6329,
+        13792,
+        13,
+        50489
+      ],
+      "temperature": 1.0,
+      "avg_logprob": -3.147242228190104,
+      "compression_ratio": 0.8518518518518519,
+      "no_speech_prob": 0.0876813530921936
+    }
+  ],
+  "language": "en"
+}

@@ -135,7 +135,7 @@ def load_vocabulary_csv(path: str | Path) -> list[MedicationName]:
     output: list[MedicationName] = []
     with Path(path).open(newline="", encoding="utf-8-sig") as stream:
         for row in csv.DictReader(stream):
-            name = _first(row, ("name", "str", "medication_name"))
+            name = _first(row, ("name", "str", "medication_name", "drug_name"))
             if not name:
                 continue
             output.append(MedicationName(

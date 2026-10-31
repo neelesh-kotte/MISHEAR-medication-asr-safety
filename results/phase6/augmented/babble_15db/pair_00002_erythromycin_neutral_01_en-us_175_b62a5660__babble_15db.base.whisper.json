@@ -1,0 +1,29 @@
+{
+  "text": " Please bear with remition now.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.0,
+      "text": " Please bear with remition now.",
+      "tokens": [
+        50364,
+        2555,
+        6155,
+        365,
+        890,
+        270,
+        313,
+        586,
+        13,
+        50464
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.7791713367808949,
+      "compression_ratio": 0.7894736842105263,
+      "no_speech_prob": 0.18242992460727692
+    }
+  ],
+  "language": "en"
+}

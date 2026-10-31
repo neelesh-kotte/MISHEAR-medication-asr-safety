@@ -1,0 +1,29 @@
+{
+  "text": " Here comes our hero underage in time",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.54,
+      "text": " Here comes our hero underage in time",
+      "tokens": [
+        50364,
+        1692,
+        1487,
+        527,
+        5316,
+        833,
+        609,
+        294,
+        565,
+        50491
+      ],
+      "temperature": 1.0,
+      "avg_logprob": -3.5585670471191406,
+      "compression_ratio": 0.8181818181818182,
+      "no_speech_prob": 0.12709014117717743
+    }
+  ],
+  "language": "en"
+}

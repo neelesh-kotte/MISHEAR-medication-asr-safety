@@ -1,0 +1,37 @@
+{
+  "text": " Wirவ faceugen jetzt eine Menge Fнутernrièrequarteringensee.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 3.08,
+      "text": " Wirவ faceugen jetzt eine Menge Fнутernrièrequarteringensee.",
+      "tokens": [
+        50364,
+        4347,
+        8708,
+        1851,
+        27915,
+        4354,
+        3018,
+        40723,
+        479,
+        35643,
+        1248,
+        22166,
+        43363,
+        278,
+        1288,
+        68,
+        13,
+        50518
+      ],
+      "temperature": 1.0,
+      "avg_logprob": -5.59597457082648,
+      "compression_ratio": 0.8904109589041096,
+      "no_speech_prob": 0.06658899039030075
+    }
+  ],
+  "language": "de"
+}

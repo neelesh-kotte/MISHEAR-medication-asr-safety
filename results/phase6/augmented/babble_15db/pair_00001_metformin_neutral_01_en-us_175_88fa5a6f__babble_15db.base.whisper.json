@@ -1,0 +1,28 @@
+{
+  "text": " Please say met for me how.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.0,
+      "text": " Please say met for me how.",
+      "tokens": [
+        50364,
+        2555,
+        584,
+        1131,
+        337,
+        385,
+        577,
+        13,
+        50464
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.8630224227905273,
+      "compression_ratio": 0.8125,
+      "no_speech_prob": 0.1840382218360901
+    }
+  ],
+  "language": "en"
+}

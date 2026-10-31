@@ -1,0 +1,30 @@
+{
+  "text": " please thank God for giving us a deep.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.0,
+      "text": " please thank God for giving us a deep.",
+      "tokens": [
+        50364,
+        1767,
+        1309,
+        1265,
+        337,
+        2902,
+        505,
+        257,
+        2452,
+        13,
+        50464
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.7567808628082275,
+      "compression_ratio": 0.8260869565217391,
+      "no_speech_prob": 0.15693815052509308
+    }
+  ],
+  "language": "en"
+}

@@ -1,0 +1,30 @@
+{
+  "text": " Please take up a bit hi, me inside",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.2600000000000002,
+      "text": " Please take up a bit hi, me inside",
+      "tokens": [
+        50364,
+        2555,
+        747,
+        493,
+        257,
+        857,
+        4879,
+        11,
+        385,
+        1854,
+        50477
+      ],
+      "temperature": 1.0,
+      "avg_logprob": -3.044525146484375,
+      "compression_ratio": 0.8095238095238095,
+      "no_speech_prob": 0.1369878351688385
+    }
+  ],
+  "language": "en"
+}

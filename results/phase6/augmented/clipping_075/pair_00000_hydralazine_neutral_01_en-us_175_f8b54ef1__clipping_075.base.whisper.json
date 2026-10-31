@@ -1,0 +1,31 @@
+{
+  "text": " Please say hi, Rallye, how?",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.0,
+      "text": " Please say hi, Rallye, how?",
+      "tokens": [
+        50364,
+        2555,
+        584,
+        4879,
+        11,
+        497,
+        379,
+        68,
+        11,
+        577,
+        30,
+        50464
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.9302505346444937,
+      "compression_ratio": 0.7714285714285715,
+      "no_speech_prob": 0.04274037852883339
+    }
+  ],
+  "language": "en"
+}

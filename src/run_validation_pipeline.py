@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from .audio_generation import build_synthesis_jobs, generate_jobs
-from .asr_evaluation import OpenAIWhisperRunner, WhisperCppRunner, run_batch
+from .asr_evaluation import OpenAIWhisperRunner, run_batch
 from .asr_evaluation import Wav2Vec2CTCRunner
 from .calibration import calibration_curve_data, fit_calibrator
 from .context_features import extract_pair_features
@@ -55,12 +55,16 @@ def _safe(value: Any) -> str:
 
 def generate_pairs(config: Mapping[str, Any], out: Path) -> list[dict[str, Any]]:
     vocab = load_vocabulary_csv(config["vocabulary_csv"])
+    if len(vocab) < 2:
+        raise ValueError("Vocabulary needs at least two rows; accepted name headers include name, medication_name, and drug_name")
     pairs = generate_candidate_pairs(vocab,
         min_jaro_winkler=float(config.get("min_jaro_winkler", 0.72)),
         min_phonetic_similarity=float(config.get("min_phonetic_similarity", 0.66)))
     limit = config.get("max_pairs")
     if limit:
         pairs = pairs[:int(limit)]
+    if not pairs:
+        raise ValueError("No medication candidate pairs met the configured similarity thresholds")
     rows = []
     for i, pair in enumerate(pairs):
         row = asdict(pair)
@@ -73,7 +77,9 @@ def generate_pairs(config: Mapping[str, Any], out: Path) -> list[dict[str, Any]]
 def synthesize(config: Mapping[str, Any], pairs: Sequence[Mapping[str, Any]], out: Path) -> list[dict[str, Any]]:
     vocab = _read_csv(config["vocabulary_csv"])
     jobs = build_synthesis_jobs(vocab, pairs, config["templates"], config["voices"], config["rates_wpm"])
-    return generate_jobs(jobs, out / "synthesis", int(config.get("sample_rate_hz", 16000)))
+    tts = config.get("tts", {})
+    return generate_jobs(jobs, out / "synthesis", int(config.get("sample_rate_hz", 16000)),
+                         backend=tts.get("backend", "say"), executable=tts.get("executable"))
 
 
 def augment(config: Mapping[str, Any], clean: Sequence[Mapping[str, Any]], out: Path) -> list[dict[str, Any]]:
@@ -193,9 +199,12 @@ def evaluate(config: Mapping[str, Any], features: Sequence[Mapping[str, Any]], o
     test_phonetic = model_phonetic.predict_proba(test)
     test_full = model_full.predict_proba(test)
     test_similarity = similarity_baseline(test)
-    budget = config.get("false_alert_budget_per_100_mentions")
+    if config.get("false_alert_budget") is not None:
+        budget = float(config["false_alert_budget"]) * 100.0
+    else:
+        budget = config.get("false_alert_budget_per_100_mentions")
     if budget is None:
-        raise ValueError("Set false_alert_budget_per_100_mentions in config before running the frozen test evaluation")
+        raise ValueError("Set false_alert_budget (a fraction) or false_alert_budget_per_100_mentions before test evaluation")
     threshold = select_threshold(y_val, val_full, budget_per_100_mentions=float(budget),
                                  alpha=float(config.get("selective_alpha", 0.05)))
     threshold_phonetic = select_threshold(y_val, val_phonetic, budget_per_100_mentions=float(budget),
