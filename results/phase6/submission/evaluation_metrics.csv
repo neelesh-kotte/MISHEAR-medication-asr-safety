@@ -1,8 +1,0 @@
-phase,model,metric,value
-ASR descriptive,primary recognizer,babble_10db_rt60_04 WER,1.34375
-ASR descriptive,primary recognizer,babble_15db WER,1.1875
-ASR descriptive,primary recognizer,babble_5db_rt60_08 WER,1.875
-ASR descriptive,primary recognizer,clean WER,0.9375
-ASR descriptive,primary recognizer,clipping_075 WER,0.9375
-Pair-confusion feasibility,label distribution,positive pair substitutions,0
-Pair-confusion feasibility,label distribution,total labeled recordings,40

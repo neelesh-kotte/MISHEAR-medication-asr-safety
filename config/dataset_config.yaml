@@ -1,7 +1,0 @@
-# LEGACY SYNTHETIC-PIPELINE CONFIG — superseded by corpus_config.yaml.
-# Retained for reproducibility only; do not use it for the human-speech study.
-random_seed: 20261030
-medication_source: RxNorm
-active_ingredient_grouping: required
-pilot_pair_target: [20, 30]
-main_pair_planning_target: [100, 200]

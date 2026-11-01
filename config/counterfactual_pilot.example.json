@@ -1,0 +1,23 @@
+{
+  "voices": ["en-gb", "en-us"],
+  "cases": [
+    {
+      "case_id": "synthetic-metformin-exploratory-001",
+      "target": "metformin",
+      "conditions": {
+        "neutral": {
+          "prefix": "The speaker then said",
+          "suffix": "was the name."
+        },
+        "informative": {
+          "prefix": "They discussed blood sugar control and then said",
+          "suffix": "was the name."
+        },
+        "misleading": {
+          "prefix": "They discussed blood pressure control and then said",
+          "suffix": "was the name."
+        }
+      }
+    }
+  ]
+}

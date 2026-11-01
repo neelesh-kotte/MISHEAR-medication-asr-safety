@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "Cite this preliminary software release; it is not a validated clinical system or peer-reviewed study."
+type: software
+title: "MISHEAR v3 counterfactual engineering pilot"
+version: 0.1.0-pilot
+authors:
+  - name: "MISHEAR contributors"
+license: MIT
+repository-code: "https://github.com/neelesh-kotte/MISHEAR-medication-asr-safety"
+abstract: "Preliminary local software for matched-target synthetic stimulus generation, waveform validation, pinned ASR inference, staged human quality review, and post-inference medication-token alignment. No validated auditor performance is claimed."
