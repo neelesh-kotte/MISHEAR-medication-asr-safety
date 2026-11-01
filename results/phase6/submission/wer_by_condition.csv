@@ -1,6 +1,0 @@
-condition_id,recordings,reference_words,word_substitutions,word_deletions,word_insertions,wer,medication_substitutions,medication_deletions,mean_measured_snr_db,mean_measured_rt60_s
-babble_10db_rt60_04,8,32,17,1,25,1.34375,7,1,10.0,0.39731374999999997
-babble_15db,8,32,17,0,21,1.1875,8,0,15.0,
-babble_5db_rt60_08,8,32,27,3,30,1.875,7,1,5.0,0.7992787499999999
-clean,8,32,16,2,12,0.9375,8,0,,
-clipping_075,8,32,18,0,12,0.9375,8,0,,

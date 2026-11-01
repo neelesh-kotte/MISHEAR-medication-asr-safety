@@ -30,6 +30,14 @@ def _sha256(path: str | Path) -> str:
     return digest.hexdigest()
 
 
+def _whisper_output_label(model_name: str) -> str:
+    """Return a safe short filename label for a Whisper model ID or checkpoint path."""
+    candidate = Path(model_name)
+    label = candidate.stem if candidate.is_file() else candidate.name
+    safe = "".join(char if char.isalnum() or char in "._-" else "_" for char in label)
+    return safe or "whisper"
+
+
 def _audio_stack():
     try:
         import numpy as np
@@ -214,7 +222,7 @@ class OpenAIWhisperRunner:
         start = time.perf_counter()
         result = self._model.transcribe(str(audio_path), **self.decoding_config)
         elapsed = time.perf_counter() - start
-        raw_path = audio_path.with_suffix(f".{self.model_name}.whisper.json")
+        raw_path = audio_path.with_suffix(f".{_whisper_output_label(self.model_name)}.whisper.json")
         raw_path.write_text(json.dumps(result, ensure_ascii=False, default=_json_default, indent=2), encoding="utf-8")
         return asdict(ASRRunRecord(
             recording_id=audio_path.stem,
@@ -241,6 +249,8 @@ class Wav2Vec2CTCRunner:
         device: str | None = None,
         save_frame_confidence: bool = True,
         revision: str | None = None,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
     ):
         try:
             import torch
@@ -250,7 +260,12 @@ class Wav2Vec2CTCRunner:
         self.torch = torch
         self.model_id = model_id
         self.revision = revision
-        load_options = {"revision": revision} if revision else {}
+        load_options: dict[str, Any] = {}
+        if revision:
+            load_options["revision"] = revision
+        if cache_dir is not None:
+            load_options["cache_dir"] = str(cache_dir)
+        load_options["local_files_only"] = bool(local_files_only)
         self.processor = AutoProcessor.from_pretrained(model_id, **load_options)
         self.model = AutoModelForCTC.from_pretrained(model_id, **load_options)
         if device is None:

@@ -1,8 +1,0 @@
-# LEGACY SYNTHETIC-PAIR EXPERIMENT CONFIG — superseded by prespecification.md.
-# Human-corpus split and review-budget IDs must be frozen in new manifests.
-seed: 20261030
-ingredient_split_fraction: {train: 0.60, validation: 0.20, test: 0.20}
-held_out_acoustic_conditions:
-  - clipping_family
-  - babble_snr_5_db_plus_rt60_0.8_s
-false_alert_budget_per_100_mentions: null  # choose before any test run
